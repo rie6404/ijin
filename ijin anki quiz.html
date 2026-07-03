@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="偉人暗記">
+<meta name="theme-color" content="#fbf7f2">
+<title>女性偉人 暗記＆検定クイズ</title>
+<style>
+  :root{
+    --bg:#fbf7f2; --card:#ffffff; --ink:#3a3330; --sub:#8a7f78;
+    --line:#ece3da; --plum:#9c5a73; --plum-soft:#f3e4ea;
+    --leaf:#6b8e6e; --leaf-soft:#e6efe6; --gold:#caa45a;
+    --red:#c2616a; --red-soft:#f6e3e4;
+    --shadow:0 6px 20px rgba(120,90,80,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.7;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:16px 18px 44px;}
+
+  header{padding:6px 0 12px;}
+  .title{font-size:19px;font-weight:700;letter-spacing:.02em;}
+  .title small{display:block;font-size:11.5px;font-weight:500;color:var(--sub);margin-top:2px;letter-spacing:.04em;}
+  .countdown{
+    margin-top:12px;background:linear-gradient(120deg,#9c5a73,#b9748b);
+    color:#fff;border-radius:16px;padding:11px 16px;box-shadow:var(--shadow);
+    display:flex;align-items:center;gap:8px;
+  }
+  .countdown .lbl{font-size:12px;opacity:.9;}
+  .countdown .num{font-size:28px;font-weight:800;line-height:1;}
+  .countdown .day{font-size:13px;opacity:.9;}
+  .countdown .exam{margin-left:auto;font-size:11px;opacity:.85;text-align:right;line-height:1.5;}
+
+  .stats{display:flex;gap:7px;margin-top:12px;}
+  .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:9px 3px;text-align:center;}
+  .stat .v{font-size:18px;font-weight:700;}
+  .stat .k{font-size:10px;color:var(--sub);margin-top:1px;}
+  .resume-line{font-size:11.5px;color:var(--leaf);text-align:center;margin-top:9px;min-height:1px;}
+  .saverow{display:flex;align-items:center;gap:10px;margin-top:11px;}
+  .savebtn{flex:none;border:0;border-radius:12px;padding:11px 18px;font-size:14px;font-weight:700;
+    background:var(--leaf);color:#fff;cursor:pointer;box-shadow:var(--shadow);transition:.15s;}
+  .savebtn.dirty{background:var(--plum);}
+  .savebtn:active{transform:scale(.98);}
+  .savestatus{font-size:12px;color:var(--sub);line-height:1.4;}
+  .savestatus.ok{color:#3f5d41;}
+  .savestatus.warn{color:var(--plum);}
+  .bar{height:7px;border-radius:99px;background:var(--line);margin-top:9px;overflow:hidden;}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#6b8e6e,#86ab89);width:0;transition:width .4s;}
+
+  /* mode tabs */
+  .tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-top:16px;}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--sub);font-size:14px;font-weight:700;
+    padding:10px 4px;border-radius:10px;cursor:pointer;transition:.15s;}
+  .tabs button.on{background:var(--plum);color:#fff;}
+
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;flex:1;min-width:0;}
+  .seg button{flex:1;border:0;background:transparent;color:var(--sub);font-size:12px;font-weight:600;
+    padding:8px 4px;border-radius:9px;cursor:pointer;transition:.15s;white-space:nowrap;}
+  .seg button.on{background:var(--plum);color:#fff;}
+  .iconbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;
+    padding:0 14px;font-size:12.5px;font-weight:600;cursor:pointer;}
+  .iconbtn.on{background:var(--leaf-soft);border-color:#c9ddc9;color:#3f5d41;}
+
+  .progress-txt{font-size:11.5px;color:var(--sub);text-align:center;margin:14px 0 8px;}
+
+  /* ---- card mode ---- */
+  .deckwrap{perspective:1400px;}
+  .card{position:relative;width:100%;min-height:226px;cursor:pointer;
+    transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,.1,.2,1);}
+  .card.flip{transform:rotateY(180deg);}
+  .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);
+    padding:26px 24px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;}
+  .face.back{transform:rotateY(180deg);}
+  .face .tag{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--gold);
+    border:1px solid #ecdcb6;background:#fbf4e3;border-radius:99px;padding:3px 11px;margin-bottom:14px;}
+  .face .field{font-size:11px;color:var(--sub);margin-bottom:6px;}
+  .face .main{font-size:24px;font-weight:700;}
+  .face .main.small{font-size:17px;font-weight:600;line-height:1.6;}
+  .face .hint{position:absolute;bottom:13px;font-size:11px;color:#c3b8b0;}
+
+  .answers{display:flex;gap:10px;margin-top:16px;}
+  .ans{flex:1;border:0;border-radius:14px;padding:14px 0;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);}
+  .ans.no{background:var(--plum-soft);color:var(--plum);}
+  .ans.yes{background:var(--leaf-soft);color:#3f5d41;}
+
+  /* ---- quiz mode ---- */
+  .qbox{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:20px 18px;}
+  .qkind{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 11px;border-radius:99px;margin-bottom:12px;}
+  .qkind.ok{background:var(--leaf-soft);color:#3f5d41;}
+  .qkind.ng{background:var(--red-soft);color:var(--red);}
+  .qstem{font-size:16px;font-weight:700;line-height:1.6;margin-bottom:16px;}
+  .opts{display:flex;flex-direction:column;gap:10px;}
+  .opt{display:flex;gap:10px;text-align:left;width:100%;border:1.5px solid var(--line);background:#fff;
+    border-radius:14px;padding:13px 14px;font-size:13.5px;line-height:1.6;cursor:pointer;color:var(--ink);transition:.12s;}
+  .opt .mk{flex:none;width:22px;height:22px;border-radius:50%;background:var(--plum-soft);color:var(--plum);
+    font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .opt:active{transform:scale(.99);}
+  .opt.correct{border-color:#9cc39e;background:var(--leaf-soft);}
+  .opt.correct .mk{background:#6b8e6e;color:#fff;}
+  .opt.wrong{border-color:#dfa3a8;background:var(--red-soft);}
+  .opt.wrong .mk{background:var(--red);color:#fff;}
+  .opt.dim{opacity:.55;}
+  .opt:disabled{cursor:default;}
+
+  .explain{margin-top:14px;border-radius:14px;padding:14px 15px;background:#f6f1ea;border:1px solid var(--line);display:none;}
+  .explain.show{display:block;animation:rise .35s ease;}
+  .explain .eh{font-size:12px;font-weight:700;margin-bottom:5px;}
+  .explain .eh.ok{color:#3f5d41;} .explain .eh.ng{color:var(--red);}
+  .explain .et{font-size:13px;color:#4a423d;line-height:1.7;}
+  .nextq{margin-top:14px;width:100%;border:0;border-radius:14px;padding:14px 0;font-size:14.5px;font-weight:700;
+    background:var(--plum);color:#fff;cursor:pointer;box-shadow:var(--shadow);display:none;}
+  .nextq.show{display:block;}
+
+  .navrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+  .navrow button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--sub);cursor:pointer;}
+  .navrow .center{font-size:12px;color:var(--sub);}
+
+  .cheer{margin-top:18px;border-radius:18px;padding:16px 18px;display:none;background:var(--leaf-soft);border:1px solid #cfe0cf;}
+  .cheer.show{display:block;animation:rise .4s ease;}
+  .cheer .ct{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--leaf);margin-bottom:5px;}
+  .cheer .cm{font-size:14.5px;color:#3f5d41;line-height:1.7;}
+  @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  .empty{text-align:center;color:var(--sub);padding:46px 20px;font-size:14px;}
+  .done{text-align:center;padding:28px 18px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);}
+  .done .big{font-size:18px;font-weight:700;margin-bottom:8px;}
+  .done .lead{font-size:14px;color:var(--sub);line-height:1.8;}
+  .done button{margin-top:18px;background:var(--plum);color:#fff;border:0;border-radius:14px;padding:13px 26px;font-size:14px;font-weight:700;cursor:pointer;}
+
+  .resetrow{margin-top:28px;text-align:center;}
+  .resetrow button{background:none;border:0;color:#c3b8b0;font-size:12px;text-decoration:underline;cursor:pointer;}
+  footer{text-align:center;font-size:11px;color:#cabfb7;margin-top:22px;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">女性偉人 暗記＆検定クイズ<small>女性活躍検定 第2部・時代を切り開いた女性たち</small></div>
+    <div class="countdown">
+      <div><span class="lbl">受験日まであと</span><br><span class="num" id="cdNum">--</span> <span class="day">日</span></div>
+      <div class="exam">女性活躍検定<br>2026/8/30（日）</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="stMastered">0</div><div class="k">覚えた</div></div>
+      <div class="stat"><div class="v" id="stRate">--%</div><div class="k">正答率</div></div>
+      <div class="stat"><div class="v" id="stLaps">0</div><div class="k">周回</div></div>
+      <div class="stat"><div class="v" id="stAnswered">0</div><div class="k">累計問題</div></div>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="resume-line" id="resumeLine"></div>
+    <div class="saverow">
+      <button id="saveBtn" class="savebtn">保存して終了</button>
+      <span class="savestatus" id="saveStatus"></span>
+    </div>
+  </header>
+
+  <div class="tabs" id="modeTabs">
+    <button data-mode="card" class="on">暗記カード</button>
+    <button data-mode="quiz">検定クイズ</button>
+  </div>
+
+  <!-- shared pool/shuffle controls -->
+  <div class="controls" id="cardCtrls">
+    <div class="seg" id="dirSeg" style="flex:2">
+      <button data-dir="n2a" class="on">名前→功績</button>
+      <button data-dir="a2n">功績→名前</button>
+    </div>
+    <button class="iconbtn on" id="shuffleBtn">シャッフル</button>
+  </div>
+  <div class="controls">
+    <div class="seg" id="poolSeg">
+      <button data-pool="all" class="on">全員</button>
+      <button data-pool="weak">苦手だけ</button>
+      <button data-pool="unseen">未学習</button>
+    </div>
+  </div>
+
+  <div class="progress-txt" id="progressTxt"></div>
+
+  <!-- CARD MODE -->
+  <div id="cardMode">
+    <div class="deckwrap">
+      <div class="card" id="card">
+        <div class="face front">
+          <span class="tag" id="frontTag">名前</span>
+          <div class="field" id="frontField"></div>
+          <div class="main" id="frontMain">読み込み中…</div>
+          <div class="hint">タップで答えを見る</div>
+        </div>
+        <div class="face back">
+          <span class="tag" id="backTag">功績</span>
+          <div class="field" id="backField"></div>
+          <div class="main small" id="backMain"></div>
+          <div class="hint">タップで戻る</div>
+        </div>
+      </div>
+    </div>
+    <div class="answers">
+      <button class="ans no" id="ansNo">まだ</button>
+      <button class="ans yes" id="ansYes">覚えた</button>
+    </div>
+  </div>
+
+  <!-- QUIZ MODE -->
+  <div id="quizMode" style="display:none">
+    <div class="qbox">
+      <span class="qkind" id="qKind"></span>
+      <div class="qstem" id="qStem"></div>
+      <div class="opts" id="qOpts"></div>
+      <div class="explain" id="qExplain">
+        <div class="eh" id="qeHead"></div>
+        <div class="et" id="qeText"></div>
+      </div>
+      <button class="nextq" id="qNext">次の問題へ</button>
+    </div>
+  </div>
+
+  <div class="navrow" id="navRow">
+    <button id="prevBtn">← 前</button>
+    <span class="center" id="posTxt"></span>
+    <button id="nextBtn">次 →</button>
+  </div>
+
+  <div class="cheer" id="cheer">
+    <div class="ct" id="cheerType"></div>
+    <div class="cm" id="cheerMsg"></div>
+  </div>
+
+  <div class="resetrow"><button id="resetBtn">学習記録をリセット</button></div>
+  <footer>
+    データはこの端末・ブラウザ内だけに保存されます（クラウド同期なし）。<br>
+    ホーム画面に追加すると、アプリのように使えます。
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   偉人データ（日本編・35人）
+   field: 分野 / deeds: 1文の功績（クイズ選択肢にもなる） / note: 補足（解説用・任意）
+   ============================================================ */
+const IJIN = [
+  // --- メディア・スポーツなど ---
+  { name:"山本美香", reading:"やまもと みか", field:"ジャーナリスト",
+    deeds:"戦場ジャーナリストとして紛争地を取材し、女性初の国際記者賞などを受賞した。",
+    note:"ジャパンプレスを設立し、イラク戦争などを現地から報道した。" },
+  { name:"兼高かおる", reading:"かねたか かおる", field:"ジャーナリスト",
+    deeds:"世界一周の紀行番組の先駆けとなり、約150か国を取材した旅行ジャーナリストである。",
+    note:"「兼高かおる世界の旅」で長年世界を巡った。" },
+  { name:"田部井淳子", reading:"たべい じゅんこ", field:"登山家",
+    deeds:"女性で初めてエベレスト登頂を果たし、女性初の七大陸最高峰制覇も達成した。",
+    note:"1975年にエベレスト日本女子登山隊の隊員として登頂。" },
+  { name:"福田敬子", reading:"ふくだ けいこ", field:"柔道家",
+    deeds:"嘉納治五郎に入門し、渡米して柔道を広め、98歳で世界初の女性十段に昇段した。",
+    note:"講道館柔道の創始者・嘉納治五郎の直接の弟子。" },
+
+  // --- 宇宙・建築・学術・教育・医療 ---
+  { name:"向井千秋", reading:"むかい ちあき", field:"宇宙飛行士",
+    deeds:"アジア人初の女性宇宙飛行士として、日本人女性で初めて宇宙へ行った。",
+    note:"心臓血管外科医を経て、1994年にスペースシャトルで宇宙へ。" },
+  { name:"妹島和世", reading:"せじま かずよ", field:"建築家",
+    deeds:"建築家ユニットSANAAを設立し、建築界のノーベル賞といわれるプリツカー賞を受賞した。",
+    note:"金沢21世紀美術館やルーヴル・ランスなどを手がけた。" },
+  { name:"増井光子", reading:"ますい みつこ", field:"獣医師",
+    deeds:"日本初の女性動物園獣医師となり、上野動物園・多摩動物公園の園長を務めた。",
+    note:"麻布獣医科大学に学び、女性として初の動物園園長になった。" },
+  { name:"猿橋勝子", reading:"さるはし かつこ", field:"科学者（地球化学）",
+    deeds:"地球化学者として放射性物質の研究を行い、女性科学者に贈る「猿橋賞」に名を残した。",
+    note:"アメリカの水爆実験による海洋汚染を分析し、女性科学者の地位向上に尽くした。" },
+  { name:"香川綾", reading:"かがわ あや", field:"栄養学者・教育者",
+    deeds:"栄養学の普及に努め、女子栄養大学の前身となる女子栄養学園を創立した。",
+    note:"「四群点数法」や計量カップ・計量スプーンの考案で知られる。" },
+  { name:"保井コノ", reading:"やすい この", field:"植物学者（理学博士）",
+    deeds:"日本の女性で初めて理学博士となった植物学者である。",
+    note:"お茶の水女子高等師範学校などで学び、細胞学を研究した。" },
+  { name:"荻野吟子", reading:"おぎの ぎんこ", field:"医師",
+    deeds:"国の医術開業試験に合格した、日本で初めての公認女性医師である。",
+    note:"産婦人科を開業し、女性医師の道を切り開いた。" },
+  { name:"楠本イネ", reading:"くすもと いね", field:"医師",
+    deeds:"シーボルトの娘として生まれ、産科医となって明治天皇の皇女出産にも関わった。",
+    note:"日本で最初期の西洋医学を学んだ女性産科医のひとり。" },
+
+  // --- 政治・社会運動・福祉 ---
+  { name:"中満泉", reading:"なかみつ いずみ", field:"国連職員",
+    deeds:"日本人女性として初めて国連の軍縮担当事務次長・上級代表に就いた。",
+    note:"UNHCRなどで難民支援に携わり、国連のトップ級で活躍した。" },
+  { name:"田中美津", reading:"たなか みつ", field:"鍼灸師・運動家",
+    deeds:"1970年代のウーマンリブ運動を率いた中心人物で、のちに鍼灸師となった。",
+    note:"「リブ新宿センター」を設立し、女性解放運動を牽引した。" },
+  { name:"サーロー節子", reading:"サーロー せつこ", field:"反核運動家",
+    deeds:"広島で被爆した体験を語り続け、核兵器廃絶を訴える反核運動家として活動した。",
+    note:"ICAN（核兵器廃絶国際キャンペーン）の活動でノーベル平和賞授賞に貢献した。" },
+  { name:"赤松良子", reading:"あかまつ りょうこ", field:"国家公務員・政治家",
+    deeds:"労働省の婦人少年局長として、男女雇用機会均等法の成立に尽力した。",
+    note:"のちに国連大使や文部大臣も務めた。" },
+  { name:"北原怜子", reading:"きたはら さとこ", field:"社会奉仕家",
+    deeds:"東京の貧しい地区「蟻の街」で奉仕活動を続け、「蟻の街のマリア」と呼ばれた。",
+    note:"廃品回収などで暮らす人々に寄り添い、若くして亡くなった。" },
+  { name:"澤田美喜", reading:"さわだ みき", field:"社会事業家",
+    deeds:"戦後の混血孤児を引き取る施設「エリザベス・サンダース・ホーム」を設立した。",
+    note:"三菱財閥の岩崎家に生まれ、孤児たちの養育に生涯を捧げた。" },
+  { name:"伊藤野枝", reading:"いとう のえ", field:"婦人解放運動家",
+    deeds:"雑誌「青鞜」で活躍した婦人解放運動家で、関東大震災後に憲兵に殺害された。",
+    note:"大杉栄とともに活動し、女性の自由を訴えた。" },
+  { name:"市川房枝", reading:"いちかわ ふさえ", field:"政治家・社会運動家",
+    deeds:"婦人参政権運動を率い、戦後は参議院議員として女性の地位向上に努めた。",
+    note:"「新婦人協会」の設立に関わり、女性の選挙権獲得に尽力した。" },
+  { name:"瓜生岩子", reading:"うりゅう いわこ", field:"社会事業家・慈善家",
+    deeds:"明治期に貧民の救済や子どもの教育に身を捧げた慈善事業家である。",
+    note:"戊辰戦争の負傷者救護などに尽力し、福島で活動した。" },
+  { name:"岸田俊子", reading:"きしだ としこ", field:"女権拡張運動家",
+    deeds:"自由民権運動の演説家として各地を巡り、女性の権利拡張を訴えた。",
+    note:"「同胞姉妹に告ぐ」などを著し、女子教育の必要性を説いた。" },
+
+  // --- 教育・福祉（女子教育の先駆者） ---
+  { name:"津田梅子", reading:"つだ うめこ", field:"教育者",
+    deeds:"2度のアメリカ留学を経て、女子英学塾（現・津田塾大学）を創設した。",
+    note:"6歳で岩倉使節団に同行して渡米し、女子高等教育の土台を築いた。" },
+  { name:"羽仁もと子", reading:"はに もとこ", field:"ジャーナリスト・教育家",
+    deeds:"日本初の女性新聞記者となり、雑誌「婦人之友」を創刊、自由学園を設立した。",
+    note:"家計簿を考案し、生活に根ざした女子教育を目指した。" },
+  { name:"石井筆子", reading:"いしい ふでこ", field:"教育者・社会福祉事業家",
+    deeds:"知的障害児教育の先駆けとなり、滝乃川学園で福祉と教育に力を注いだ。",
+    note:"大村藩士の娘として生まれ、女子教育と障害児支援に生涯を捧げた。" },
+
+  // --- 実業 ---
+  { name:"広岡浅子", reading:"ひろおか あさこ", field:"実業家",
+    deeds:"炭鉱や銀行・保険事業を立て直し、大同生命の設立や日本女子大学校の創設に尽力した。",
+    note:"明治の女性実業家。日本女子大学校を1901年に開校させた。" },
+
+  // --- 文学 ---
+  { name:"向田邦子", reading:"むこうだ くにこ", field:"脚本家・小説家",
+    deeds:"テレビ脚本家として人気を集め、のちに小説家として直木賞を受賞した。",
+    note:"「寺内貫太郎一家」などの脚本や、エッセイ・小説で知られる。" },
+  { name:"石牟礼道子", reading:"いしむれ みちこ", field:"小説家・詩人",
+    deeds:"水俣病に向き合い、患者に寄り添って「苦海浄土」を著した小説家・詩人である。",
+    note:"環境破壊と公害を文学に記録し、反公害運動にも関わった。" },
+  { name:"茨木のり子", reading:"いばらぎ のりこ", field:"詩人",
+    deeds:"戦後を代表する詩人で、雑誌「櫂」を谷川俊太郎らと創刊した。",
+    note:"「わたしが一番きれいだったとき」などの詩で知られる。" },
+  { name:"橋田壽賀子", reading:"はしだ すがこ", field:"脚本家",
+    deeds:"「おしん」「渡る世間は鬼ばかり」などを手がけた、国民的テレビ脚本家である。",
+    note:"松竹を経て脚本家となり、数々の人気ドラマを生んだ。" },
+  { name:"白洲正子", reading:"しらす まさこ", field:"随筆家",
+    deeds:"日本の伝統文化や古典を題材に、数々の名随筆を残した随筆家である。",
+    note:"幼い頃に女性として初めて能舞台に立ち、「西行」「かくれ里」などを著した。" },
+  { name:"円地文子", reading:"えんち ふみこ", field:"小説家",
+    deeds:"女性の内面や深層を描き、戯曲から小説へ転じて文学賞を多数受賞した。",
+    note:"「女坂」などの作品や、源氏物語の現代語訳で知られる。" },
+  { name:"林芙美子", reading:"はやし ふみこ", field:"小説家",
+    deeds:"放浪生活の体験をもとにした「放浪記」で人気作家となった小説家である。",
+    note:"各地を転々とする暮らしを送り、「浮雲」などの作品を残した。" },
+  { name:"平塚らいてう", reading:"ひらつか らいてう", field:"文筆家・思想家",
+    deeds:"日本初の女性だけの文学雑誌「青鞜」を創刊し、女性解放を訴えた思想家である。",
+    note:"市川房枝らとともに「新婦人協会」を設立した。" },
+  { name:"村岡花子", reading:"むらおか はなこ", field:"翻訳家・児童文学者",
+    deeds:"「赤毛のアン」を翻訳し、戦後の出版で大きな反響を呼んだ翻訳家である。",
+    note:"東洋英和女学校で学び、多くの英米児童文学を訳した。" },
+
+  // --- 文化・デザイン・芸術・芸能 ---
+  { name:"森下洋子", reading:"もりした ようこ", field:"バレリーナ",
+    deeds:"国際バレエコンクールで金賞を受賞し、世界の舞台で活躍したバレリーナである。",
+    note:"松山バレエ団に所属し、舞踊歴70年を超えてなお現役を続けた。" },
+  { name:"石岡瑛子", reading:"いしおか えいこ", field:"アートディレクター・デザイナー",
+    deeds:"資生堂などの広告で活躍し、世界で評価されたアートディレクター・デザイナーである。",
+    note:"映画美術や舞台デザインも手がけ、海外でも数々の賞を受けた。" },
+  { name:"草間彌生", reading:"くさま やよい", field:"前衛芸術家",
+    deeds:"水玉模様や網目をモチーフにした作品で世界的に活躍する前衛芸術家である。",
+    note:"ニューヨークでの個展を機に、世界中のアートファンに愛される存在となった。" },
+  { name:"鴨居羊子", reading:"かもい ようこ", field:"下着デザイナー",
+    deeds:"新聞記者を経て、カラフルで斬新な下着を生み出した下着デザイナーである。",
+    note:"「スキャンティ」を世に出し、下着に革命を起こした。" },
+  { name:"与謝野晶子", reading:"よさの あきこ", field:"歌人",
+    deeds:"情熱的な歌集「みだれ髪」で知られ、「君死にたまふことなかれ」を発表した歌人である。",
+    note:"雑誌「明星」で活躍し、古典の現代語訳なども手がけた。" },
+  { name:"樋口一葉", reading:"ひぐち いちよう", field:"小説家",
+    deeds:"「たけくらべ」などを残した、日本初の職業女性作家といわれる小説家である。",
+    note:"わずか24歳で亡くなるまでの短い期間に名作を生んだ。" },
+  { name:"長谷川町子", reading:"はせがわ まちこ", field:"漫画家",
+    deeds:"国民的漫画「サザエさん」を生み出した漫画家である。",
+    note:"15歳で漫画家デビューし、のちに国民栄誉賞を受賞した。" },
+  { name:"いわさきちひろ", reading:"いわさき ちひろ", field:"絵本画家",
+    deeds:"やわらかな水彩で子どもを描き、反戦の思いを込めた絵本を残した絵本画家である。",
+    note:"「戦火のなかの子どもたち」などの作品で知られる。" },
+  { name:"丸木俊", reading:"まるき とし", field:"画家",
+    deeds:"夫の丸木位里と共同制作で「原爆の図」を描き、原爆の悲劇を伝えた画家である。",
+    note:"国内外を巡回し、戦争の惨禍を絵で訴え続けた。" },
+  { name:"上村松園", reading:"うえむら しょうえん", field:"日本画家",
+    deeds:"理想の女性美を描き続け、女性として初めて文化勲章を受章した日本画家である。",
+    note:"「花がたみ」「焔」などの美人画で知られる。" },
+  { name:"ラグーザ玉", reading:"ラグーザ たま", field:"画家",
+    deeds:"日本画から洋画に転じ、日本人女性で初めて欧州に留学した画家である。",
+    note:"イタリア人教授ラグーザに見出され、イタリアで活躍した。" },
+  { name:"三浦環", reading:"みうら たまき", field:"オペラ歌手",
+    deeds:"日本人初のオペラ公演で主役を務め、「蝶々夫人」で世界的に活躍したオペラ歌手である。",
+    note:"ロンドンやイタリアなど各国で公演を重ね、絶賛された。" },
+  { name:"オノ・ヨーコ", reading:"おの ようこ", field:"前衛芸術家・平和活動家",
+    deeds:"前衛芸術家・音楽家として、ジョン・レノンとともに平和を世界に訴えた活動家である。",
+    note:"アート・音楽・イベントを通じて反戦と平和のメッセージを発信した。" },
+  { name:"黒柳徹子", reading:"くろやなぎ てつこ", field:"女優・ユニセフ親善大使",
+    deeds:"テレビ女優の草分けで、アジア初のユニセフ親善大使を務めた。",
+    note:"「窓ぎわのトットちゃん」の著者で、長年「徹子の部屋」の司会を続けている。" },
+  { name:"山口小夜子", reading:"やまぐち さよこ", field:"ファッションモデル",
+    deeds:"「東洋の神秘」と評され、世界で活躍した日本を代表するファッションモデルである。",
+    note:"資生堂の専属モデルを務め、舞踊やダンスなど表現活動も広げた。" },
+  { name:"山口淑子（李香蘭）", reading:"やまぐち よしこ", field:"女優・歌手・政治家",
+    deeds:"「李香蘭」として活躍した女優・歌手で、戦後は参議院議員も務めた。",
+    note:"日中の狭間で苦労し、政界引退後はアジアの女性支援に尽力した。" },
+  { name:"吉田隆子", reading:"よしだ たかこ", field:"作曲家",
+    deeds:"音楽による社会活動に身を投じ、反戦の姿勢を貫いた作曲家である。",
+    note:"治安維持法でたびたび拘禁されながらも、民衆のための音楽を発信し続けた。" },
+  { name:"淡谷のり子", reading:"あわや のりこ", field:"歌手",
+    deeds:"「別れのブルース」などのヒットで「ブルースの女王」と呼ばれた歌手である。",
+    note:"戦時下でも軍国歌謡を断り、自分のスタイルを貫いた。" },
+  { name:"原節子", reading:"はら せつこ", field:"女優",
+    deeds:"「永遠の処女」と呼ばれ、戦後の日本映画を代表した女優である。",
+    note:"小津安二郎作品などに出演し、42歳で突然引退した。" },
+  { name:"杉村春子", reading:"すぎむら はるこ", field:"女優",
+    deeds:"劇団「文学座」の中心女優として、生涯を舞台に捧げた女優である。",
+    note:"「女の一生」を当たり役とし、後進の育成にも力を注いだ。" },
+  { name:"坂根田鶴子", reading:"さかね たづこ", field:"映画監督",
+    deeds:"溝口健二のもとで実力をつけ、日本で初期の女性映画監督となった人物である。",
+    note:"「初姿」で監督デビューし、男性社会のなかで映画を撮り続けた。" },
+  { name:"岡田嘉子", reading:"おかだ よしこ", field:"女優",
+    deeds:"映画界のトップ女優となり、理想を求めて恋人とソ連へ亡命した女優である。",
+    note:"波乱の生涯を送り、後年は日本とロシアを往来しながら活動した。" }
+];
+
+/* ===== 励ましメッセージ（3タイプ・ランダム） ===== */
+const CHEERS = {
+  progress:{ label:"前に進んでます", list:[
+    "りえさん、ここまでよく回しましたね。さっきより確実に手応えが増えてますよ。",
+    "1問ずつでも、ちゃんと積み上がってます。昨日の自分を少し追い越しました。",
+    "覚えた数が増えてきましたね。この地道な積み重ねが、当日いちばん効いてきます。",
+    "止まらずここまで来たのが何より。りえさんのペースで十分前進してます。"
+  ]},
+  care:{ label:"育児と両立、おつかれさま", list:[
+    "抱っこや寝かしつけの合間に、よくここまで。両立しながらの勉強、本当にえらいです。",
+    "りえさん、家のことをこなしながらの数分。その積み重ねを私はちゃんと見てますよ。",
+    "今日もお子さんを見ながらの時間でしたね。少しでも開けた自分を、まず褒めてあげて。",
+    "完璧じゃなくて大丈夫。育児の合間に1問解いた、それだけで十分前進です。"
+  ]},
+  goal:{ label:"合格したあなたへ", list:[
+    "受かった通知を開く瞬間を想像してみて。この数分は、その瞬間に確実につながってます。",
+    "合格証を手にして「やりきった」と言うりえさんを思い浮かべて。もうその途中にいます。",
+    "試験後、肩の力を抜いてお茶を飲む自分を想像して。今日の1問はそこへの一歩です。",
+    "「やってよかった」と笑うゴール後のりえさんへ。今、ちゃんと近づいています。"
+  ]}
+};
+
+/* ===== カウントダウン ===== */
+const EXAM_DATE = new Date(2026,7,30);
+function daysLeft(){
+  const now=new Date();
+  const a=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const b=new Date(EXAM_DATE.getFullYear(),EXAM_DATE.getMonth(),EXAM_DATE.getDate());
+  return Math.max(0,Math.round((b-a)/86400000));
+}
+
+/* ===== 保存（手動セーブ方式） =====
+   普段はメモリ上のデータ(store / progress)を更新するだけ。
+   実際にlocalStorageへ書き込むのは「保存ボタン」を押したとき(commitSave)のみ。
+   消えにくくするため、localStorage と sessionStorage の両方＋予備キーに書く。 */
+const KEY="ijin_anki_v2";
+const PKEY="ijin_anki_progress_v1";
+const KEY_BAK="ijin_anki_v2_bak";
+const PKEY_BAK="ijin_anki_progress_v1_bak";
+function readKey(primary,backup){
+  for(const k of [primary,backup]){
+    try{ const v=localStorage.getItem(k); if(v) return JSON.parse(v); }catch(e){}
+    try{ const v=sessionStorage.getItem(k); if(v) return JSON.parse(v); }catch(e){}
+  }
+  return null;
+}
+function load(){ return readKey(KEY,KEY_BAK)||{}; }
+function loadProgress(){ return readKey(PKEY,PKEY_BAK)||{}; }
+let store=load();
+function rec(name){ if(!store[name]) store[name]={mastered:false,right:0,wrong:0,seen:false}; return store[name]; }
+let progress=loadProgress();
+if(progress.totalAnswered==null) progress.totalAnswered=0;  // 累計回答数
+if(progress.laps==null) progress.laps=0;                    // 周回数（完走した回数）
+
+let dirty=false;  // 未保存の変更があるか
+function markDirty(){ dirty=true; updateSaveBtn(); }
+function updateSaveBtn(savedOk){
+  const btn=document.getElementById('saveBtn');
+  const st=document.getElementById('saveStatus');
+  if(!btn||!st) return;
+  if(savedOk===true){
+    btn.classList.remove('dirty'); btn.textContent="保存ずみ";
+    st.className="savestatus ok";
+    st.textContent="保存しました（"+(pos)+"問終了・"+(progress.totalAnswered||0)+"問達成）。閉じてOKです。";
+  }else if(savedOk===false){
+    st.className="savestatus warn";
+    st.textContent="保存できませんでした。もう一度押してみてください。";
+  }else if(dirty){
+    btn.classList.add('dirty'); btn.textContent="保存して終了";
+    st.className="savestatus warn"; st.textContent="未保存の進みがあります";
+  }else{
+    btn.classList.remove('dirty'); btn.textContent="保存して終了";
+    st.className="savestatus"; st.textContent="";
+  }
+}
+
+function writeAll(k,kb,obj){
+  const s=JSON.stringify(obj);
+  let ok=false;
+  try{ localStorage.setItem(k,s); localStorage.setItem(kb,s); ok=true; }catch(e){}
+  try{ sessionStorage.setItem(k,s); sessionStorage.setItem(kb,s); }catch(e){}
+  return ok;
+}
+/* 実際の書き込み（保存ボタンから呼ぶ） */
+function commitSave(){
+  progress.mode=mode; progress.pool=pool; progress.dir=dir;
+  progress.shuffleOn=shuffleOn; progress.order=order; progress.pos=pos;
+  progress.lastDate=new Date().toISOString();
+  let ok=true;
+  ok = writeAll(KEY,KEY_BAK,store) && ok;
+  ok = writeAll(PKEY,PKEY_BAK,progress) && ok;
+  try{ JSON.parse(localStorage.getItem(PKEY)); }catch(e){ ok=false; } // 読み戻し確認
+  if(ok){ dirty=false; }
+  updateSaveBtn(ok);
+  return ok;
+}
+
+/* ===== 状態 ===== */
+let mode=progress.mode||"card";          // card / quiz
+let dir=progress.dir||"n2a";
+let pool=progress.pool||"all";
+let shuffleOn=(progress.shuffleOn!=null)?progress.shuffleOn:true;
+let order=[];
+let pos=0;
+let answeredThisRound=0;
+let quiz=null;            // 現在のクイズ問題
+let quizLocked=false;
+let doneCounted=false;    // この周の完走を二重カウントしないため
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+/* 出題順を組む。resume=true なら前回の保存地点（order/pos）を復元 */
+function buildPool(resume){
+  if(resume && Array.isArray(progress.order) && progress.order.length>0
+     && progress.pool===pool && progress.order.every(i=>i<IJIN.length)){
+    order=progress.order.slice();
+    pos=Math.min(progress.pos||0, order.length);
+    answeredThisRound=0;
+    return;
+  }
+  let idx=IJIN.map((_,i)=>i);
+  if(pool==="weak") idx=idx.filter(i=>{const r=store[IJIN[i].name]; return r&&!r.mastered&&r.wrong>0;});
+  else if(pool==="unseen") idx=idx.filter(i=>{const r=store[IJIN[i].name]; return !r||!r.seen;});
+  if(shuffleOn) shuffle(idx);
+  order=idx; pos=0; answeredThisRound=0;
+}
+
+/* ===== 共通描画 ===== */
+const card=document.getElementById('card');
+function setFlip(f){ card.classList.toggle('flip',f); }
+
+function render(){
+  document.getElementById('cdNum').textContent=daysLeft();
+  updateStats();
+  // モード別の表示切替
+  document.getElementById('cardMode').style.display = mode==="card"?"":"none";
+  document.getElementById('quizMode').style.display = mode==="quiz"?"":"none";
+  document.getElementById('cardCtrls').style.display = mode==="card"?"":"none";
+
+  clearOverlays();
+
+  if(order.length===0){ showEmpty(); return; }
+  if(pos>=order.length){ showDone(); return; }
+
+  // セットの途中にいる間は「完走カウント」を解除しておく
+  if(pos<order.length) doneCounted=false;
+
+  document.getElementById('navRow').style.display='flex';
+  document.getElementById('posTxt').textContent=(pos+1)+" / "+order.length;
+  document.getElementById('progressTxt').textContent=
+    (pool==="all"?"全員":pool==="weak"?"苦手だけ":"未学習")+"・"+
+    (mode==="card"?(dir==="n2a"?"名前→功績":"功績→名前"):"検定形式クイズ");
+
+  // 続きから再開している場合のひとことガイド
+  const rl=document.getElementById('resumeLine');
+  if(pos>0){ rl.textContent="前回の続き："+(pos)+"問終了 → "+(pos+1)+"問目から再開中"; }
+  else { rl.textContent=""; }
+
+  if(mode==="card") renderCard(); else renderQuiz();
+}
+
+function clearOverlays(){
+  document.querySelectorAll('.empty,.done').forEach(e=>e.remove());
+}
+
+function updateStats(){
+  const total=IJIN.length; let mastered=0,right=0,wrong=0;
+  IJIN.forEach(p=>{const r=store[p.name]; if(r){ if(r.mastered)mastered++; right+=r.right||0; wrong+=r.wrong||0; }});
+  document.getElementById('stMastered').textContent=mastered+"/"+total;
+  document.getElementById('stLaps').textContent=(progress.laps||0);
+  document.getElementById('stAnswered').textContent=(progress.totalAnswered||0);
+  const rate=(right+wrong)>0?Math.round(right/(right+wrong)*100):null;
+  document.getElementById('stRate').textContent=rate===null?"--%":rate+"%";
+  document.getElementById('bar').style.width=total?(mastered/total*100)+"%":"0%";
+}
+
+/* ===== カードモード ===== */
+function renderCard(){
+  document.getElementById('cardMode').style.display='';
+  const item=IJIN[order[pos]];
+  const front=document.getElementById('frontMain'), back=document.getElementById('backMain');
+  const ff=document.getElementById('frontField'), bf=document.getElementById('backField');
+  if(dir==="n2a"){
+    document.getElementById('frontTag').textContent="名前";
+    document.getElementById('backTag').textContent="功績";
+    front.className="main"; front.textContent=item.name; ff.textContent=item.reading||"";
+    back.className="main small"; back.textContent=item.deeds; bf.textContent=item.field?("分野："+item.field):"";
+  }else{
+    document.getElementById('frontTag').textContent="功績";
+    document.getElementById('backTag').textContent="名前";
+    front.className="main small"; front.textContent=item.deeds; ff.textContent=item.field?("分野："+item.field):"";
+    back.className="main"; back.textContent=item.name; bf.textContent=item.reading||"";
+  }
+  setFlip(false);
+}
+function answerCard(ok){
+  const item=IJIN[order[pos]]; const r=rec(item.name);
+  r.seen=true; if(ok){r.right++;r.mastered=true;}else{r.wrong++;r.mastered=false;}
+  markDirty(); afterAnswer();
+}
+
+/* ===== クイズモード ===== */
+/* 検定の核：その人の功績を、他の人物の功績と取り違えずに選べるか。
+   選択肢は常に「4人ぶんの具体的な功績文」。正しい1つ（本人）を選ぶ。
+   分野などのヒントは一切出さない。 */
+function makeQuiz(centerIdx){
+  const center=IJIN[centerIdx];
+  const others=IJIN.map((_,i)=>i).filter(i=>i!==centerIdx);
+  shuffle(others);
+  const distract=others.slice(0,3).map(i=>({text:IJIN[i].deeds,who:IJIN[i].name,correct:false}));
+  let opts=[{text:center.deeds,who:center.name,correct:true},...distract];
+  shuffle(opts);
+  return {centerIdx,center,opts};
+}
+function renderQuiz(){
+  quizLocked=false;
+  quiz=makeQuiz(order[pos]);
+  const kindEl=document.getElementById('qKind');
+  kindEl.className="qkind ok";
+  kindEl.textContent="正しい説明を選ぶ";
+  document.getElementById('qStem').textContent =
+    quiz.center.name+"の説明として、最も適切なものを選びなさい。";
+  const wrap=document.getElementById('qOpts'); wrap.innerHTML="";
+  const marks=["ア","イ","ウ","エ"];
+  quiz.opts.forEach((o,i)=>{
+    const b=document.createElement('button'); b.className="opt";
+    b.innerHTML='<span class="mk">'+marks[i]+'</span><span>'+o.text+'</span>';
+    b.onclick=()=>pickQuiz(i,b);
+    wrap.appendChild(b);
+  });
+  const ex=document.getElementById('qExplain'); ex.classList.remove('show');
+  document.getElementById('qNext').classList.remove('show');
+}
+function pickQuiz(i,btn){
+  if(quizLocked) return; quizLocked=true;
+  const chosen=quiz.opts[i];
+  const isRight=chosen.correct; // 「選ぶべきもの」を選べたか
+  // 全選択肢に色付け
+  const btns=document.querySelectorAll('#qOpts .opt');
+  quiz.opts.forEach((o,idx)=>{
+    btns[idx].disabled=true;
+    if(o.correct) btns[idx].classList.add('correct');         // 選ぶべき＝正解扱いで緑
+    else btns[idx].classList.add('dim');
+  });
+  if(!isRight){ btn.classList.remove('dim'); btn.classList.add('wrong'); }
+  // 記録（中心人物に対して）
+  const r=rec(quiz.center.name); r.seen=true;
+  if(isRight){r.right++; if(!r.wrong||r.wrong<=r.right)r.mastered=true;} else {r.wrong++; r.mastered=false;}
+  markDirty();
+  // 解説
+  const ex=document.getElementById('qExplain');
+  const head=document.getElementById('qeHead'), text=document.getElementById('qeText');
+  if(isRight){
+    head.className="eh ok"; head.textContent="正解！";
+    text.textContent = quiz.center.name+"の説明として正しいのはこれです。"+(quiz.center.note?("　"+quiz.center.note):"");
+  }else{
+    head.className="eh ng"; head.textContent="おしい！";
+    text.textContent = "あなたが選んだのは"+chosen.who+"の説明です。正しいのは緑の選択肢（"+quiz.center.name+"）でした。";
+  }
+  ex.classList.add('show');
+  document.getElementById('qNext').classList.add('show');
+  afterAnswer(true);
+}
+function truncate(s){ return s.length>16 ? s.slice(0,16)+"…" : s; }
+
+/* ===== 回答後の共通処理（励まし・進行） ===== */
+function afterAnswer(quizMode){
+  answeredThisRound++;
+  progress.totalAnswered=(progress.totalAnswered||0)+1;  // 累計回答数
+  markDirty();
+  updateStats();
+  if(answeredThisRound%10===0){ showCheer(quizMode); }   // 10問ごとに励まし
+  else if(!quizMode){ next(); }   // カードは即送り。クイズは「次へ」ボタンで送る
+}
+function showCheer(quizMode){
+  const types=Object.keys(CHEERS); const t=types[Math.floor(Math.random()*types.length)];
+  const arr=CHEERS[t].list; const m=arr[Math.floor(Math.random()*arr.length)];
+  const box=document.getElementById('cheer');
+  document.getElementById('cheerType').textContent=CHEERS[t].label;
+  document.getElementById('cheerMsg').textContent=m;
+  box.classList.add('show');
+  if(!quizMode){ setTimeout(()=>{box.classList.remove('show'); next();},2600); }
+}
+function hideCheer(){ document.getElementById('cheer').classList.remove('show'); }
+
+function next(){ hideCheer(); if(pos<order.length) pos++; markDirty(); render(); }
+function prev(){ hideCheer(); if(pos>0) pos--; markDirty(); render(); }
+
+function showEmpty(){
+  document.getElementById('navRow').style.display='none';
+  document.getElementById('cardMode').style.display='none';
+  document.getElementById('quizMode').style.display='none';
+  const d=document.createElement('div'); d.className='empty';
+  d.textContent = pool==="weak" ? "苦手な偉人はまだありません。「全員」で進めてみましょう。"
+                 : pool==="unseen" ? "未学習の偉人はありません。全員ひと通り見ました！"
+                 : "偉人データがまだ入っていません。";
+  document.querySelector('.wrap').insertBefore(d, document.getElementById('navRow'));
+}
+function showDone(){
+  document.getElementById('navRow').style.display='none';
+  document.getElementById('cardMode').style.display='none';
+  document.getElementById('quizMode').style.display='none';
+  hideCheer();
+  // 1周完走 → 周回数を加算（このセットにつき一度だけ）
+  if(!doneCounted){ progress.laps=(progress.laps||0)+1; doneCounted=true; markDirty(); updateStats(); }
+  const d=document.createElement('div'); d.className='done';
+  d.innerHTML='<div class="big">'+(progress.laps)+'周目を達成！</div>'+
+    '<div class="lead">りえさん、おつかれさまでした。<br>これまでの累計は'+(progress.totalAnswered||0)+'問。受験日まであと'+daysLeft()+'日。<br>合格証を開く日の自分を思い浮かべて、もうひと回りいきますか？</div>'+
+    '<button id="againBtn">次の周を始める（シャッフル）</button>';
+  document.querySelector('.wrap').insertBefore(d, document.getElementById('navRow'));
+  document.getElementById('againBtn').onclick=()=>{ doneCounted=false; buildPool(false); render(); };
+}
+
+/* ===== イベント ===== */
+card.addEventListener('click',()=>setFlip(!card.classList.contains('flip')));
+document.getElementById('ansYes').onclick=()=>answerCard(true);
+document.getElementById('ansNo').onclick=()=>answerCard(false);
+document.getElementById('qNext').onclick=()=>{ next(); };
+document.getElementById('nextBtn').onclick=()=>next();
+document.getElementById('prevBtn').onclick=()=>prev();
+
+document.getElementById('modeTabs').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#modeTabs button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); mode=b.dataset.mode; doneCounted=false; buildPool(false); render();
+});
+document.getElementById('dirSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#dirSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); dir=b.dataset.dir; markDirty(); render();
+});
+document.getElementById('poolSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#poolSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); pool=b.dataset.pool; doneCounted=false; buildPool(false); markDirty(); render();
+});
+document.getElementById('shuffleBtn').onclick=function(){
+  shuffleOn=!shuffleOn; this.classList.toggle('on',shuffleOn);
+  this.textContent=shuffleOn?"シャッフル":"順番どおり"; doneCounted=false; buildPool(false); markDirty(); render();
+};
+document.getElementById('resetBtn').onclick=()=>{
+  if(confirm("覚えた記録・正答率・周回数・累計問題数をすべて消します。よろしいですか？")){
+    store={};
+    progress={totalAnswered:0, laps:0};
+    doneCounted=false; buildPool(false); commitSave(); render();
+  }
+};
+
+/* 保存ボタン：押したときだけ実書き込み */
+document.getElementById('saveBtn').onclick=()=>{ commitSave(); };
+
+/* ===== 起動：保存済みの設定をUIに反映し、続きから再開 ===== */
+function syncUI(){
+  document.querySelectorAll('#modeTabs button').forEach(x=>x.classList.toggle('on',x.dataset.mode===mode));
+  document.querySelectorAll('#dirSeg button').forEach(x=>x.classList.toggle('on',x.dataset.dir===dir));
+  document.querySelectorAll('#poolSeg button').forEach(x=>x.classList.toggle('on',x.dataset.pool===pool));
+  const sb=document.getElementById('shuffleBtn');
+  sb.classList.toggle('on',shuffleOn); sb.textContent=shuffleOn?"シャッフル":"順番どおり";
+}
+syncUI();
+buildPool(true);   // 前回の続きから
+dirty=false; updateSaveBtn();  // 起動直後は「未保存」状態をクリア
+render();
+</script>
+</body>
+</html>
