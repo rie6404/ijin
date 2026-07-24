@@ -184,6 +184,13 @@
       <button data-pool="unseen">未学習</button>
     </div>
   </div>
+  <div class="controls">
+    <div class="seg" id="regionSeg">
+      <button data-region="all" class="on">全員</button>
+      <button data-region="jp">日本編</button>
+      <button data-region="world">世界編</button>
+    </div>
+  </div>
 
   <div class="progress-txt" id="progressTxt"></div>
 
@@ -652,7 +659,7 @@ function writeAll(k,kb,obj){
 }
 /* 実際の書き込み（保存ボタンから呼ぶ） */
 function commitSave(){
-  progress.mode=mode; progress.pool=pool; progress.dir=dir;
+  progress.mode=mode; progress.pool=pool; progress.dir=dir; progress.region=region;
   progress.shuffleOn=shuffleOn; progress.order=order; progress.pos=pos;
   progress.lastDate=new Date().toISOString();
   let ok=true;
@@ -668,6 +675,7 @@ function commitSave(){
 let mode=progress.mode||"card";          // card / quiz
 let dir=progress.dir||"n2a";
 let pool=progress.pool||"all";
+let region=progress.region||"all";   // all / jp / world  
 let shuffleOn=(progress.shuffleOn!=null)?progress.shuffleOn:true;
 let order=[];
 let pos=0;
@@ -678,16 +686,21 @@ let doneCounted=false;    // この周の完走を二重カウントしないた
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
+/* 日本編は配列の 0〜56番目 と 96〜99番目、世界編はその間の 57〜95番目 */
+function isJP(i){ return (i>=0 && i<57) || (i>=96 && i<100); }
+
 /* 出題順を組む。resume=true なら前回の保存地点（order/pos）を復元 */
 function buildPool(resume){
   if(resume && Array.isArray(progress.order) && progress.order.length>0
-     && progress.pool===pool && progress.order.every(i=>i<IJIN.length)){
+     && progress.pool===pool && progress.region===region && progress.order.every(i=>i<IJIN.length)){
     order=progress.order.slice();
     pos=Math.min(progress.pos||0, order.length);
     answeredThisRound=0;
     return;
   }
   let idx=IJIN.map((_,i)=>i);
+  if(region==="jp") idx=idx.filter(i=>isJP(i));
+  else if(region==="world") idx=idx.filter(i=>!isJP(i));
   if(pool==="weak") idx=idx.filter(i=>{const r=store[IJIN[i].name]; return r&&!r.mastered&&r.wrong>0;});
   else if(pool==="unseen") idx=idx.filter(i=>{const r=store[IJIN[i].name]; return !r||!r.seen;});
   if(shuffleOn) shuffle(idx);
@@ -717,6 +730,7 @@ function render(){
   document.getElementById('navRow').style.display='flex';
   document.getElementById('posTxt').textContent=(pos+1)+" / "+order.length;
   document.getElementById('progressTxt').textContent=
+    (region==="all"?"全員":region==="jp"?"日本編":"世界編")+"・"+
     (pool==="all"?"全員":pool==="weak"?"苦手だけ":"未学習")+"・"+
     (mode==="card"?(dir==="n2a"?"名前→功績":"功績→名前"):"検定形式クイズ");
 
@@ -914,6 +928,11 @@ document.getElementById('resetBtn').onclick=()=>{
     doneCounted=false; buildPool(false); commitSave(); render();
   }
 };
+document.getElementById('regionSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#regionSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); region=b.dataset.region; doneCounted=false; buildPool(false); markDirty(); render();
+});
 
 /* 保存ボタン：押したときだけ実書き込み */
 document.getElementById('saveBtn').onclick=()=>{ commitSave(); };
@@ -923,6 +942,9 @@ function syncUI(){
   document.querySelectorAll('#modeTabs button').forEach(x=>x.classList.toggle('on',x.dataset.mode===mode));
   document.querySelectorAll('#dirSeg button').forEach(x=>x.classList.toggle('on',x.dataset.dir===dir));
   document.querySelectorAll('#poolSeg button').forEach(x=>x.classList.toggle('on',x.dataset.pool===pool));
+  document.querySelectorAll('#poolSeg button').forEach(x=>x.classList.toggle('on',x.dataset.pool===pool));
+  document.querySelectorAll('#regionSeg button').forEach(x=>x.classList.toggle('on',x.dataset.region===region));
+  const sb=document.getElementById('shuffleBtn');
   const sb=document.getElementById('shuffleBtn');
   sb.classList.toggle('on',shuffleOn); sb.textContent=shuffleOn?"シャッフル":"順番どおり";
 }
