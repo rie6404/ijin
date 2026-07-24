@@ -941,11 +941,11 @@ document.getElementById('saveBtn').onclick=()=>{ commitSave(); };
 function syncUI(){
   document.querySelectorAll('#modeTabs button').forEach(x=>x.classList.toggle('on',x.dataset.mode===mode));
   document.querySelectorAll('#dirSeg button').forEach(x=>x.classList.toggle('on',x.dataset.dir===dir));
-  document.querySelectorAll('#poolSeg button').forEach(x=>x.classList.toggle('on',x.dataset.pool===pool));
+  
   document.querySelectorAll('#poolSeg button').forEach(x=>x.classList.toggle('on',x.dataset.pool===pool));
   document.querySelectorAll('#regionSeg button').forEach(x=>x.classList.toggle('on',x.dataset.region===region));
   const sb=document.getElementById('shuffleBtn');
-  const sb=document.getElementById('shuffleBtn');
+
   sb.classList.toggle('on',shuffleOn); sb.textContent=shuffleOn?"シャッフル":"順番どおり";
 }
 syncUI();
